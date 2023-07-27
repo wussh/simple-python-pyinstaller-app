@@ -17,7 +17,7 @@ pipeline {
                 }
             }
             steps {
-                node {
+                node('any') {
                     sh 'python -m py_compile sources/add2vals.py sources/calc.py'
                 }
             }
@@ -29,7 +29,7 @@ pipeline {
                 }
             }
             steps {
-                node {
+                node('any') {
                     sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
                 }
             }
@@ -46,7 +46,7 @@ pipeline {
                 }
             }
             steps {
-                node {
+                node('any') {
                     sh 'pyinstaller --onefile sources/add2vals.py'
                 }
             }

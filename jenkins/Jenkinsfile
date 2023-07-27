@@ -29,7 +29,7 @@ pipeline {
         stage('Deliver') {
             agent {
                 docker {
-                    image 'my_pyinstaller_image' // Use the custom Docker image here
+                    image 'wushie/my_pyinstaller_image' // Use the custom Docker image here
                     args '--entrypoint=""'
                 }
             }

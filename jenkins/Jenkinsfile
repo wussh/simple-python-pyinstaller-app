@@ -7,7 +7,9 @@ pipeline {
             steps {
                 // Clone the repository and set a custom workspace directory
                 checkout scm
-                workspace "/var/jenkins_home/workspace/${JOB_NAME}-${BUILD_NUMBER}"
+                dir("/var/jenkins_home/workspace/${JOB_NAME}-${BUILD_NUMBER}") {
+                    // Add any additional steps you need inside the custom workspace directory
+                }
             }
         }
         stage('Build') {

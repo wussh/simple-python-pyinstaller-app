@@ -43,4 +43,10 @@ pipeline {
             }
         }
     }
+
+    options {
+        // Custom workspace directory to ensure workspace is correctly mounted
+        // in the Docker container
+        customWorkspace '/var/jenkins_home/workspace/${JOB_NAME}-${BUILD_NUMBER}'
+    }
 }

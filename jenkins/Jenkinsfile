@@ -1,15 +1,15 @@
 pipeline {
-    agent none
+    agent any
+
+    environment {
+        VOLUME = "${pwd()}/sources:/src"
+        IMAGE = 'cdrx/pyinstaller-linux:python2'
+    }
 
     stages {
         stage('Preparation') {
-            agent any
             steps {
-                // Clone the repository and set a custom workspace directory
                 checkout scm
-                dir("/var/jenkins_home/workspace/${JOB_NAME}-${BUILD_NUMBER}") {
-                    // Add any additional steps you need inside the custom workspace directory
-                }
             }
         }
         stage('Build') {
@@ -19,9 +19,7 @@ pipeline {
                 }
             }
             steps {
-                node('any') {
-                    sh 'python -m py_compile sources/add2vals.py sources/calc.py'
-                }
+                sh 'python -m py_compile sources/add2vals.py sources/calc.py'
             }
         }
         stage('Test') {
@@ -31,9 +29,7 @@ pipeline {
                 }
             }
             steps {
-                node('any') {
-                    sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
-                }
+                sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
             }
             post {
                 always {
@@ -48,13 +44,11 @@ pipeline {
                 }
             }
             steps {
-                node('any') {
-                    sh 'pyinstaller --onefile sources/add2vals.py'
-                }
+                sh "docker run --rm -v ${env.VOLUME} ${env.IMAGE} 'pyinstaller -F sources/add2vals.py'"
             }
             post {
                 success {
-                    archiveArtifacts 'dist/add2vals'
+                    archiveArtifacts "sources/dist/add2vals"
                 }
             }
         }

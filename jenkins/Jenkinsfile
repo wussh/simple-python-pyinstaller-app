@@ -1,16 +1,18 @@
 pipeline {
-    agent any // Use any available agent to run the pipeline
-
+    agent none
+    options {
+        skipDefaultCheckout true // Skip the default checkout step
+    }
     stages {
         stage('Build') {
             agent {
                 docker {
                     image 'python:2-alpine'
-                    // Add workspace volume mapping
                     args '-v $PWD:/var/jenkins_home/workspace/submission-cicd-pipeline-andrianata_daud_Gr9D'
                 }
             }
             steps {
+                checkout scm // Manually checkout the source code
                 sh 'python -m py_compile sources/add2vals.py sources/calc.py'
             }
         }
@@ -18,11 +20,11 @@ pipeline {
             agent {
                 docker {
                     image 'qnib/pytest'
-                    // Add workspace volume mapping
                     args '-v $PWD:/var/jenkins_home/workspace/submission-cicd-pipeline-andrianata_daud_Gr9D'
                 }
             }
             steps {
+                checkout scm // Manually checkout the source code
                 sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
             }
             post {
@@ -35,11 +37,11 @@ pipeline {
             agent {
                 docker {
                     image 'cdrx/pyinstaller-linux:python2'
-                    // Add workspace volume mapping
                     args '-v $PWD:/var/jenkins_home/workspace/submission-cicd-pipeline-andrianata_daud_Gr9D'
                 }
             }
             steps {
+                checkout scm // Manually checkout the source code
                 sh 'pyinstaller --onefile sources/add2vals.py'
             }
             post {

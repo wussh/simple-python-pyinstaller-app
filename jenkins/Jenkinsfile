@@ -1,17 +1,13 @@
 pipeline {
     agent any
 
-    environment {
-        VOLUME = "${pwd()}/sources:/src"
-        IMAGE = 'cdrx/pyinstaller-linux:python2'
-    }
-
     stages {
-        stage('Preparation') {
+        stage('Checkout SCM') {
             steps {
-                checkout scm
+                // Your SCM checkout steps here
             }
         }
+
         stage('Build') {
             agent {
                 docker {
@@ -19,9 +15,11 @@ pipeline {
                 }
             }
             steps {
+                // Your build steps here
                 sh 'python -m py_compile sources/add2vals.py sources/calc.py'
             }
         }
+
         stage('Test') {
             agent {
                 docker {
@@ -29,27 +27,22 @@ pipeline {
                 }
             }
             steps {
+                // Your test steps here
                 sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
             }
-            post {
-                always {
-                    junit 'test-reports/results.xml'
-                }
-            }
         }
+
         stage('Deliver') {
             agent {
                 docker {
                     image 'cdrx/pyinstaller-linux:python2'
+                    args '--entrypoint=""' // Adding the --entrypoint argument
                 }
             }
             steps {
-                sh "docker run --rm -v ${env.VOLUME} ${env.IMAGE} 'pyinstaller -F sources/add2vals.py'"
-            }
-            post {
-                success {
-                    archiveArtifacts "sources/dist/add2vals"
-                }
+                // Your deliver steps here
+                // This stage will run inside the cdrx/pyinstaller-linux:python2 container
+                // with an empty entry point.
             }
         }
     }

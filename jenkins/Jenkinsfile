@@ -42,5 +42,14 @@ pipeline {
                 }
             }
         }
+        stage('Deploy') {
+            agent any
+            steps {
+                script {
+                    // Copy the artifact to the EC2 instance
+                    sh 'scp -i /home/wush/wush.pem dist/add2vals user@18.143.169.201:/home/ubuntu/'
+                }
+            }
+        }
     }
 }

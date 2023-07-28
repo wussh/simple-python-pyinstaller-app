@@ -47,7 +47,7 @@ pipeline {
             steps {
                 script {
                     // Copy the artifact to the EC2 instance
-                    sh 'scp -i /home/wush/wush.pem dist/add2vals user@18.143.169.201:/home/ubuntu/'
+                    sh 'scp -i /home/wush/wush.pem dist/add2vals ubuntu@18.143.169.201:/home/ubuntu/'
                 }
             }
         }

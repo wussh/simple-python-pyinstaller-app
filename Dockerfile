@@ -1,7 +1,11 @@
-FROM python:3-alpine
+FROM wushie/my_pyinstaller_image:5
 
 # Set the working directory to /app
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
-COPY . /app
+# Change the ownership of the /app directory to allow the default user to write to it
+USER root
+RUN chown -R 1000:1000 /app
+
+# Switch back to the non-root user
+USER 1000

@@ -29,13 +29,12 @@ pipeline {
         stage('Deliver') {
             agent {
                 docker {
-                    image 'wushie/my_pyinstaller_image:5' // Use the correct Docker image here
+                    image 'my_pyinstaller_image:latest' // Use the correct tag of the updated Docker image here
                     args '--entrypoint=""'
                 }
             }
             steps {
-                sh '/usr/local/bin/python -m pip install --upgrade pip' // Upgrade pip
-                sh 'pip install pyinstaller' // Install pyinstaller
+                sh 'pip install pyinstaller' // Install pyinstaller first before using it
                 sh 'pyinstaller --onefile sources/add2vals.py'
             }
             post {

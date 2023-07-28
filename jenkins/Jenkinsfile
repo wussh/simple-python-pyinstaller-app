@@ -29,7 +29,7 @@ pipeline {
         stage('Deliver') {
             agent {
                 docker {
-                    image 'my_pyinstaller_image:latest' // Use the correct tag of the updated Docker image here
+                    image 'wushie/my_pyinstaller_image:6' // Use the correct tag of the updated Docker image here
                     args '--entrypoint=""'
                 }
             }

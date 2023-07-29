@@ -24,8 +24,7 @@ node {
     }
     
     stage('Deploy') {
-        def SSH_KEY = readFile('wushsecret')
-        sshagent(['wushsecret']) {
+        withCredentials([file(credentialsId: 'wushsecret', variable: 'SSH_KEY')]) {
             sh "scp -i $SSH_KEY dist/add2vals ubuntu@54.169.230.31:/home/ubuntu/"
         }
         sleep 1 * 60

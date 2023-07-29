@@ -29,7 +29,7 @@ pipeline {
         stage('Deliver') {
             agent {
                 docker {
-                    image 'wushie/my_pyinstaller_image:8' // Gunakan tag yang benar dari gambar Docker yang diperbarui di sini
+                    image 'wushie/my_pyinstaller_image:8'
                     args '--entrypoint=""'
                 }
             }
@@ -42,29 +42,30 @@ pipeline {
                 }
             }
         }
-        stage('Deploy') {
+        stage('Manual Approval') {
             agent any
             steps {
                 script {
-                    // Ambil kunci pribadi dari kredensial Jenkins
+                    input(message: 'Lanjutkan ke tahap Deploy?', ok: 'Proceed', submitterParameter: 'APPROVE_DEPLOY')
+                }
+            }
+        }
+        stage('Deploy') {
+            agent any
+            when {
+                expression { return env.APPROVE_DEPLOY == 'Proceed' }
+            }
+            steps {
+                script {
                     withCredentials([file(credentialsId: 'wushsecret', variable: 'SSH_KEY')]) {
-                        // Salin artifact ke instans EC2
-                        sh 'scp -i $SSH_KEY dist/add2vals ubuntu@13.212.20.18:/home/ubuntu/'
+                        sh 'scp -i $SSH_KEY dist/add2vals ubuntu@54.169.230.31:/home/ubuntu/'
                     }
                 }
             }
             post {
-                success {
-                    input(message: 'Application deployed successfully. Press "Proceed" to continue.', ok: 'Proceed')
+                always {
+                    sleep(time: 1, unit: 'MINUTES')
                 }
-            }
-        }
-    }
-    post {
-        always {
-            // Pause the pipeline for 1 minute after successful deployment
-            script {
-                sleep(time: 1, unit: 'MINUTES')
             }
         }
     }

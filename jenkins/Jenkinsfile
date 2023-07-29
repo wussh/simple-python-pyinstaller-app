@@ -4,30 +4,29 @@ node {
             sh 'python -m py_compile sources/add2vals.py sources/calc.py'
         }
     }
-
+    
     stage('Test') {
         docker.image('qnib/pytest').inside {
             sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
         }
         junit 'test-reports/results.xml'
     }
-
+    
     stage('Deliver') {
         docker.image('wushie/my_pyinstaller_image:8').inside("--entrypoint=''") {
             sh 'pyinstaller --onefile sources/add2vals.py'
         }
         archiveArtifacts 'dist/add2vals'
     }
-
+    
     stage('Manual Approval') {
         input message: 'Lanjutkan ke tahap Deploy?', submitter: 'user'
     }
-
+    
     stage('Deploy') {
-        withCredentials([file(credentialsId: 'wushsecretsekali', variable: 'SSH_KEY')]) {
-            sshagent(['wushsecret']) {
-                sh "scp -i $SSH_KEY dist/add2vals ubuntu@54.169.230.31:/home/ubuntu/"
-            }
+        def SSH_KEY = readFile('wushsecret')
+        sshagent(['wushsecret']) {
+            sh "scp -i $SSH_KEY dist/add2vals ubuntu@54.169.230.31:/home/ubuntu/"
         }
         sleep 1 * 60
     }

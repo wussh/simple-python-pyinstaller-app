@@ -1,77 +1,57 @@
 pipeline {
-    agent any
-
+    agent none
     stages {
         stage('Build') {
-            steps {
-                // Checkout the repository from Git
-                checkout scm
-
-                // Compile Python files using Docker
-                script {
-                    docker.image('python:2-alpine').inside {
-                        sh 'python -m py_compile sources/add2vals.py sources/calc.py'
-                    }
+            agent {
+                docker {
+                    image 'python:2-alpine'
                 }
             }
+            steps {
+                sh 'python -m py_compile sources/add2vals.py sources/calc.py'
+            }
         }
-
         stage('Test') {
-            steps {
-                // Run tests using Docker
-                script {
-                    docker.image('qnib/pytest').inside {
-                        sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
-                    }
+            agent {
+                docker {
+                    image 'qnib/pytest'
                 }
-
-                // Archive test results
-                post {
-                    always {
-                        archiveArtifacts 'test-reports/results.xml'
-                    }
+            }
+            steps {
+                sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
+            }
+            post {
+                always {
+                    junit 'test-reports/results.xml'
                 }
             }
         }
-
         stage('Deliver') {
-            steps {
-                // Build a PyInstaller executable using Docker
-                script {
-                    docker.image('wushie/my_pyinstaller_image:8').inside {
-                        sh 'pyinstaller --onefile sources/add2vals.py'
-                    }
+            agent {
+                docker {
+                    image 'wushie/my_pyinstaller_image:8' // Gunakan tag yang benar dari gambar Docker yang diperbarui di sini
+                    args '--entrypoint=""'
                 }
-
-                // Archive the PyInstaller executable
-                post {
-                    always {
-                        archiveArtifacts '**/add2vals'
-                    }
+            }
+            steps {
+                sh 'pyinstaller --onefile sources/add2vals.py'
+            }
+            post {
+                success {
+                    archiveArtifacts 'dist/add2vals'
                 }
             }
         }
-
-        stage('Manual Approval') {
-            steps {
-                // Ask for manual approval before deploying
-                input(message: 'Lanjutkan ke tahap Deploy?', ok: 'Proceed', submitterParameter: 'APPROVE_DEPLOY')
-            }
-        }
-
         stage('Deploy') {
-            when {
-                // Only run this stage if the approval input is "Proceed"
-                expression { return env.APPROVE_DEPLOY == 'Proceed' }
-            }
+            agent any
             steps {
-                // Deploy the artifact to an EC2 instance using SCP
-                withCredentials([file(credentialsId: 'wushsecret', variable: 'SSH_KEY')]) {
-                    sh 'scp -i $SSH_KEY dist/add2vals ubuntu@54.169.230.31:/home/ubuntu/'
+                script {
+                    // Ambil kunci pribadi dari kredensial Jenkins
+                    withCredentials([file(credentialsId: 'wushsecret', variable: 'SSH_KEY')]) {
+                        // Salin artifact ke instans EC2
+                        sh 'scp -i $SSH_KEY dist/add2vals ubuntu@54.169.230.31:/home/ubuntu/'
+                    }
                 }
-
-                // Sleep for 1 minute after successful deployment
-                sleep(time: 1, unit: 'MINUTES')
             }
         }
     }

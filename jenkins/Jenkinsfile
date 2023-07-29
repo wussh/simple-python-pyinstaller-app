@@ -24,7 +24,7 @@ node {
     }
 
     stage('Deploy') {
-        withCredentials([file(credentialsId: 'wushsecret', variable: 'SSH_KEY')]) {
+        withCredentials([file(credentialsId: 'wushsecretsekali', variable: 'SSH_KEY')]) {
             sshagent(['wushsecret']) {
                 sh "scp -i $SSH_KEY dist/add2vals ubuntu@54.169.230.31:/home/ubuntu/"
             }

@@ -11,6 +11,7 @@ pipeline {
                 sh 'python -m py_compile sources/add2vals.py sources/calc.py'
             }
         }
+
         stage('Test') {
             agent {
                 docker {
@@ -26,6 +27,7 @@ pipeline {
                 }
             }
         }
+
         stage('Deliver') {
             agent {
                 docker {
@@ -42,30 +44,33 @@ pipeline {
                 }
             }
         }
+
         stage('Manual Approval') {
             agent any
             steps {
                 script {
+                    // Ask for manual approval before deploying
                     input(message: 'Lanjutkan ke tahap Deploy?', ok: 'Proceed', submitterParameter: 'APPROVE_DEPLOY')
                 }
             }
         }
+
         stage('Deploy') {
             agent any
             when {
+                // Only run this stage if the approval input is "Proceed"
                 expression { return env.APPROVE_DEPLOY == 'Proceed' }
             }
             steps {
                 script {
+                    // Ambil kunci pribadi dari kredensial Jenkins
                     withCredentials([file(credentialsId: 'wushsecret', variable: 'SSH_KEY')]) {
+                        // Salin artifact ke instans EC2
                         sh 'scp -i $SSH_KEY dist/add2vals ubuntu@54.169.230.31:/home/ubuntu/'
                     }
                 }
-            }
-            post {
-                always {
-                    sleep(time: 1, unit: 'MINUTES')
-                }
+                // Sleep for 1 minute after successful deployment
+                sleep(time: 1, unit: 'MINUTES')
             }
         }
     }

@@ -1,42 +1,41 @@
 node {
-    stage('Build') {
-        docker.image('python:2-alpine').inside {
-            sh 'python -m py_compile sources/add2vals.py sources/calc.py'
-        }
-    }
-
-    stage('Test') {
-        docker.image('qnib/pytest').inside {
-            sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
-        }
-        post {
-            always {
-                junit 'test-reports/results.xml'
+    try {
+        stage('Build') {
+            docker.image('python:2-alpine').inside {
+                sh 'python -m py_compile sources/add2vals.py sources/calc.py'
             }
         }
-    }
 
-    stage('Deliver') {
-        docker.image('wushie/my_pyinstaller_image:8').inside("--entrypoint=\"\"") {
-            sh 'pyinstaller --onefile sources/add2vals.py'
+        stage('Test') {
+            docker.image('qnib/pytest').inside {
+                sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
+            }
+            junit 'test-reports/results.xml'
         }
-        post {
+
+        stage('Deliver') {
+            docker.image('wushie/my_pyinstaller_image:8').inside("--entrypoint=\"\"") {
+                sh 'pyinstaller --onefile sources/add2vals.py'
+            }
             success {
                 archiveArtifacts 'dist/add2vals'
             }
         }
-    }
 
-    stage('Manual Approval') {
-        steps {
+        stage('Manual Approval') {
             input message: 'Lanjutkan ke tahap Deploy?', submitter: 'user'
         }
-    }
 
-    stage('Deploy') {
-        sshagent(['wushsecret']) {
-            sh 'scp -i $SSH_KEY dist/add2vals ubuntu@54.169.230.31:/home/ubuntu/'
+        stage('Deploy') {
+            sshagent(['wushsecret']) {
+                sh 'scp -i $SSH_KEY dist/add2vals ubuntu@54.169.230.31:/home/ubuntu/'
+            }
+            sleep 1 * 60
         }
-        sleep 1 * 60
+    } catch (Exception e) {
+        // Handle the exception here (if needed)
+        // For example, send notifications, log errors, etc.
+        echo "An error occurred: ${e.getMessage()}"
+        currentBuild.result = 'FAILURE'
     }
 }

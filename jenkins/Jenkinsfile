@@ -49,9 +49,22 @@ pipeline {
                     // Ambil kunci pribadi dari kredensial Jenkins
                     withCredentials([file(credentialsId: 'wushsecret', variable: 'SSH_KEY')]) {
                         // Salin artifact ke instans EC2
-                        sh 'scp -i $SSH_KEY dist/add2vals ubuntu@13.212.49.130:/home/ubuntu/'
+                        sh 'scp -i $SSH_KEY dist/add2vals ubuntu@13.212.20.18:/home/ubuntu/'
                     }
                 }
+            }
+            post {
+                success {
+                    input(message: 'Application deployed successfully. Press "Proceed" to continue.', ok: 'Proceed')
+                }
+            }
+        }
+    }
+    post {
+        always {
+            // Pause the pipeline for 1 minute after successful deployment
+            script {
+                sleep(time: 1, unit: 'MINUTES')
             }
         }
     }

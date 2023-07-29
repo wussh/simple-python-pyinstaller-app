@@ -49,7 +49,7 @@ pipeline {
                     // Ambil kunci pribadi dari kredensial Jenkins
                     withCredentials([file(credentialsId: 'wushsecret', variable: 'SSH_KEY')]) {
                         // Salin artifact ke instans EC2
-                        sh 'scp -i $SSH_KEY dist/add2vals ubuntu@18.143.169.201:/home/ubuntu/'
+                        sh 'scp -i $SSH_KEY dist/add2vals ubuntu@13.212.49.130:/home/ubuntu/'
                     }
                 }
             }

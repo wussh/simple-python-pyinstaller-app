@@ -8,8 +8,10 @@ pipeline {
                 checkout scm
 
                 // Compile Python files using Docker
-                docker.image('python:2-alpine').inside {
-                    sh 'python -m py_compile sources/add2vals.py sources/calc.py'
+                script {
+                    docker.image('python:2-alpine').inside {
+                        sh 'python -m py_compile sources/add2vals.py sources/calc.py'
+                    }
                 }
             }
         }
@@ -17,24 +19,36 @@ pipeline {
         stage('Test') {
             steps {
                 // Run tests using Docker
-                docker.image('qnib/pytest').inside {
-                    sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
+                script {
+                    docker.image('qnib/pytest').inside {
+                        sh 'py.test --verbose --junit-xml test-reports/results.xml sources/test_calc.py'
+                    }
                 }
 
                 // Archive test results
-                archiveArtifacts 'test-reports/results.xml'
+                post {
+                    always {
+                        archiveArtifacts 'test-reports/results.xml'
+                    }
+                }
             }
         }
 
         stage('Deliver') {
             steps {
                 // Build a PyInstaller executable using Docker
-                docker.image('wushie/my_pyinstaller_image:8').inside {
-                    sh 'pyinstaller --onefile sources/add2vals.py'
+                script {
+                    docker.image('wushie/my_pyinstaller_image:8').inside {
+                        sh 'pyinstaller --onefile sources/add2vals.py'
+                    }
                 }
 
                 // Archive the PyInstaller executable
-                archiveArtifacts '**/add2vals'
+                post {
+                    always {
+                        archiveArtifacts '**/add2vals'
+                    }
+                }
             }
         }
 
